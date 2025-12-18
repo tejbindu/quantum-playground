@@ -1,0 +1,18 @@
+.pallete {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(3, 1fr);
+    height: fit-content;
+    width: fit-content;
+}
+
+.button {
+    padding: 2px; 
+    justify-self: start; 
+    align-self: start; 
+    align-items: center; 
+    justify-content: center; 
+    display: flex;
+    background-color: transparent; 
+    border: 1px dashed #ccc
+}
