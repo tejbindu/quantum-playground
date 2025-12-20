@@ -1,12 +1,13 @@
 import "./App.css";
 import { TabbedWindows } from "./components/basic/TabbedWindows";
 import { QuantumCircuitSimulator } from "./components/circuit-sim/QuantumCircuitSimulator";
+import { StablizerEvolutionSimulator } from "./components/stabilizer-evolution/StabilizerEvolutionSimulator";
 
 function App() {
 
     const windows: [string, React.JSX.Element][] = [
 	['Quantum Circuit Simulation', <QuantumCircuitSimulator />], 
-	['Stabilizer Tableu Operations', <div>second</div>]
+	['Stabilizer Tableu Operations', <StablizerEvolutionSimulator />]
     ]
 
   return (

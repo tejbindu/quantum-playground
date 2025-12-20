@@ -7,8 +7,10 @@ import { Pallete } from "./ui/pallete/Pallete";
 import { SingleQubitGateNode } from './ui/nodes/SingleQubitGateNode'
 import { TwoQubitGateNode } from './ui/nodes/TwoQubitGateNode'
 import { useNodes } from '@xyflow/react';
+import TableauInput from "./tableau-input/TableauInput";
 
-export function QuantumCircuitSimulator() {
+export function StablizerEvolutionSimulator() {
+    const [numQubits, setNumQubits] = useState<number>(3);
 
     const nodeTypes = {
 	'qubitNode': QubitNode,
@@ -17,13 +19,26 @@ export function QuantumCircuitSimulator() {
 	'twoQubitGateNode': TwoQubitGateNode
     };
 
-    const initialNodes = [];
+    const createQubitNodes = (count: number) => {
+        return Array(count).fill(null).map((_, i) => ({
+            id: `qubit-${i}`,
+            type: 'qubitNode',
+            position: { x: 50, y: 100 + i * 80 },
+            data: { value: '|0⟩', label: `Q${i}` }
+        }));
+    };
 
-    const initialEdges = [];
+    const [nodes, setNodes] = useState<any[]>(createQubitNodes(numQubits));
+    const [edges, setEdges] = useState<any[]>([]);
 
-    const [nodes, setNodes] = useState(initialNodes);
-
-    const [edges, setEdges] = useState(initialEdges);
+    // Update ReactFlow nodes when numQubits changes
+    useEffect(() => {
+        setNodes(prevNodes => {
+            const qubitNodes = createQubitNodes(numQubits);
+            const nonQubitNodes = prevNodes.filter(node => node.type !== 'qubitNode');
+            return [...qubitNodes, ...nonQubitNodes];
+        });
+    }, [numQubits]);
 
     const onNodesChange = useCallback(
 	(changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)), []
@@ -165,6 +180,7 @@ export function QuantumCircuitSimulator() {
 	    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px'}}>
 		<Pallete onNodesChange={onNodesChange} />
 		<button onClick={() => simulateCircuit()}>Compile Circuit and Run</button>
+		<TableauInput numQubits={numQubits} onNumQubitsChange={setNumQubits} />
 	    </div>
 	    <div style= {{ height: '80vh', width: '80vw', border:'2px solid gray'}}>
 		<ReactFlow

@@ -1,0 +1,12 @@
+
+.qubit-node {
+    border: 2px solid #333;
+    padding: 9px;
+    border-radius: 50%;
+    width: 8px;
+    height: 8px;
+    display: flex;
+    color: blue;
+    align-items: center;
+    justify-content: center
+}
