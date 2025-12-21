@@ -7,6 +7,7 @@ import { Pallete } from "./ui/pallete/Pallete";
 import { SingleQubitGateNode } from './ui/nodes/SingleQubitGateNode'
 import { TwoQubitGateNode } from './ui/nodes/TwoQubitGateNode'
 import { useNodes } from '@xyflow/react';
+import { InstructionsSidebar } from '../basic/InstructionsSidebar';
 
 export function QuantumCircuitSimulator() {
 
@@ -237,6 +238,18 @@ export function QuantumCircuitSimulator() {
     }
     return (
 	<div style={{ display: 'flex', flexDirection: 'column', gap: '20px'}}>
+	    <InstructionsSidebar 
+		title="Circuit Simulation"
+		steps={[
+		    "Click on qubit nodes (|0⟩ or |1⟩) in the palette to add them to the canvas",
+		    "Drag qubits vertically to arrange them in order",
+		    "Click on gate nodes (H, X, Y, Z, CNOT, etc.) to add gates",
+		    "Connect nodes by dragging from output handles to input handles",
+		    "Each qubit must connect through gates to a measurement node",
+		    "Click 'Compile Circuit and Run' to simulate",
+		    "View probability distribution for each basis state below"
+		]}
+	    />
 	    <div style={{ display: 'flex', gap: '30px'}}>
 		<div style={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
 		    <Pallete onNodesChange={onNodesChange} />

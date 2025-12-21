@@ -14,6 +14,7 @@ import pauli_y from '@assets/images/pauli_y.svg';
 import pauli_z from '@assets/images/pauli_z.svg';
 import cnot from '@assets/images/cnot.svg';
 import swap from '@assets/images/swap.svg';
+import { InstructionsSidebar } from '../basic/InstructionsSidebar';
 
 export function StablizerEvolutionSimulator() {
     const [numQubits, setNumQubits] = useState<number>(3);
@@ -183,6 +184,18 @@ export function StablizerEvolutionSimulator() {
     }
     return (
 	<div style={{ display: 'flex', flexDirection: 'column', gap: '20px'}}>
+	    <InstructionsSidebar 
+		title="Stabilizer Evolution"
+		steps={[
+		    "Define initial stabilizer generators in the table (e.g., XII, IXI, IIX)",
+		    "Set the phase for each generator (+1, -1, +i, -i)",
+		    "Add/remove qubits using the buttons in the table",
+		    "Click on Clifford gates (H, X, Y, Z, CNOT, SWAP) to add them",
+		    "Connect gates between qubit and measurement nodes",
+		    "Click 'Compile Circuit and Run' to see evolution",
+		    "Watch how stabilizers transform through each gate operation"
+		]}
+	    />
 	    <div style={{ display: 'flex', gap: '30px'}}>
 		<div style={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
 		    <Pallete onNodesChange={onNodesChange} />

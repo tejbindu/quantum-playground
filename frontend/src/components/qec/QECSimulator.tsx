@@ -1,5 +1,6 @@
 import { useState } from "react";
 import TableauInput from "../stabilizer-evolution/tableau-input/TableauInput";
+import { InstructionsSidebar } from '../basic/InstructionsSidebar';
 
 export function QECSimulator() {
     const [codeType, setCodeType] = useState<string>("bit_flip");
@@ -76,6 +77,19 @@ export function QECSimulator() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px' }}>
+            <InstructionsSidebar 
+                title="Error Correction"
+                steps={[
+                    "Select a pre-built QEC code from the dropdown (bit-flip, phase-flip, or Steane)",
+                    "Read the code description to understand what errors it corrects",
+                    "Inject errors by selecting error type (X, Y, or Z) and qubit number",
+                    "Multiple errors can be added - they appear as colored tags",
+                    "Click 'Measure Syndrome & Correct' to run error correction",
+                    "View the syndrome (measurement results) for each state",
+                    "See the recovery operation needed to fix the error",
+                    "Verify the state is corrected back to the original"
+                ]}
+            />
             <h2 style={{ color: '#667eea', fontWeight: '700' }}>Quantum Error Correction</h2>
             
             <div style={{ display: 'flex', gap: '30px' }}>
