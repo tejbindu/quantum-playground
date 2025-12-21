@@ -22,7 +22,7 @@ mod circuit;
 async fn main() {
     let app = Router::new()
         // API routes
-        .route("/circuit/simulate", post(circuit_simulation_handler))
+        .route("/quantum/circuit/simulate", post(circuit_simulation_handler))
         // Serve static files as fallback
         .fallback_service(ServeDir::new("frontend/dist"))
         .layer(CorsLayer::permissive());

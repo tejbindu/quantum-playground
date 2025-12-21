@@ -149,7 +149,7 @@ export function QuantumCircuitSimulator() {
 	    "qubitNodes": qubitNodes,
 	    "operations": operations
 	}
-	fetch('/circuit/simulate', {
+	fetch('/quantum/circuit/simulate', {
 	    method: 'POST',
 	    headers: {
 		'Content-Type': 'application/json'
