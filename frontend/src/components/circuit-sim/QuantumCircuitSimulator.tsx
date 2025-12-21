@@ -25,6 +25,8 @@ export function QuantumCircuitSimulator() {
 
     const [edges, setEdges] = useState(initialEdges);
 
+    const [probabilities, setProbabilities] = useState<number[]>([]);
+
     const onNodesChange = useCallback(
 	(changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)), []
     );
@@ -37,6 +39,85 @@ export function QuantumCircuitSimulator() {
 
     const simulateCircuit = () => {
 
+	// Validation checks
+	const qubitNodes = nodes.filter(node => node.type === 'qubitNode');
+	const gateNodes = nodes.filter(node => node.type === 'singleQubitGateNode' || node.type === 'twoQubitGateNode');
+	const measurementNodes = nodes.filter(node => node.type === 'measurementNode');
+
+	// Check 1: Circuit must have at least one qubit
+	if (qubitNodes.length === 0) {
+	    alert('Invalid circuit: No qubits found. Add at least one qubit.');
+	    return;
+	}
+
+	// Check 2: All qubits must be measured
+	if (measurementNodes.length !== qubitNodes.length) {
+	    alert(`Invalid circuit: ${qubitNodes.length} qubit(s) but only ${measurementNodes.length} measurement(s). Each qubit must be measured.`);
+	    return;
+	}
+
+	// Check 3: All nodes must have proper connections
+	const nodeConnections = new Map();
+	nodes.forEach(node => nodeConnections.set(node.id, { incoming: 0, outgoing: 0 }));
+
+	edges.forEach(edge => {
+	    nodeConnections.get(edge.source).outgoing++;
+	    nodeConnections.get(edge.target).incoming++;
+	});
+
+	// Qubits must have exactly 1 outgoing connection
+	for (const qubit of qubitNodes) {
+	    const conn = nodeConnections.get(qubit.id);
+	    if (conn.outgoing === 0) {
+		alert(`Invalid circuit: Qubit is not connected to anything.`);
+		return;
+	    }
+	}
+
+	// Single qubit gates must have 1 input and 1 output
+	for (const gate of nodes.filter(n => n.type === 'singleQubitGateNode')) {
+	    const conn = nodeConnections.get(gate.id);
+	    if (conn.incoming !== 1) {
+		alert(`Invalid circuit: Single qubit gate (${gate.data.operation}) must have exactly 1 input wire.`);
+		return;
+	    }
+	    if (conn.outgoing !== 1) {
+		alert(`Invalid circuit: Single qubit gate (${gate.data.operation}) must have exactly 1 output wire.`);
+		return;
+	    }
+	}
+
+	// Two qubit gates must have 2 inputs and 2 outputs
+	for (const gate of nodes.filter(n => n.type === 'twoQubitGateNode')) {
+	    const conn = nodeConnections.get(gate.id);
+	    if (conn.incoming !== 2) {
+		alert(`Invalid circuit: Two qubit gate (${gate.data.operation}) must have exactly 2 input wires.`);
+		return;
+	    }
+	    if (conn.outgoing !== 2) {
+		alert(`Invalid circuit: Two qubit gate (${gate.data.operation}) must have exactly 2 output wires.`);
+		return;
+	    }
+	}
+
+	// Measurement nodes must have exactly 1 input
+	for (const measurement of measurementNodes) {
+	    const conn = nodeConnections.get(measurement.id);
+	    if (conn.incoming !== 1) {
+		alert(`Invalid circuit: Measurement node must have exactly 1 input wire.`);
+		return;
+	    }
+	}
+
+	// Check 4: No disconnected nodes
+	for (const node of nodes) {
+	    const conn = nodeConnections.get(node.id);
+	    if (node.type !== 'qubitNode' && node.type !== 'measurementNode' && conn.incoming === 0 && conn.outgoing === 0) {
+		alert(`Invalid circuit: Gate (${node.data.operation}) is not connected to the circuit.`);
+		return;
+	    }
+	}
+
 	const nodesData = Object.fromEntries(
 	    nodes.map(node => [node.id, {
 		type: node.type,
@@ -45,16 +126,9 @@ export function QuantumCircuitSimulator() {
 	    }])
 	)
 
-	const qubitNodes = nodes.filter(node => node.type === 'qubitNode').sort((node1, node2) =>node1.position.y - node2.position.y).map(node => ({
+	const sortedQubitNodes = qubitNodes.sort((node1, node2) =>node1.position.y - node2.position.y).map(node => ({
 	    id: node.id,
 	    value: node.data.value
-	}))
-	const gateNodes = nodes.filter(node => node.type === 'singleQubitGateNode' || node.type === 'twoQubitGateNode').map(node => ({
-	    id: node.id,
-	    operation: node.data.operation
-	}))
-	const measurementNodes = nodes.filter(node => node.type === 'measurementNode').map(node => ({
-	    id: node.id
 	}))
 
 	const graph = Object.fromEntries(
@@ -70,7 +144,7 @@ export function QuantumCircuitSimulator() {
 
 	const operations = []
 
-	const nodeQueue = qubitNodes.map(
+	const nodeQueue = sortedQubitNodes.map(
 	    node => ({
 		...node,
 		type: 'qubitNode',
@@ -84,8 +158,6 @@ export function QuantumCircuitSimulator() {
 	    const id = node.id
 	    const inputs = node.inputs
 	    const operation = node.operation
-
-	    console.log(node)
 
 	    if (!(node.type === 'qubitNode')) {
 		operations.push({
@@ -137,16 +209,9 @@ export function QuantumCircuitSimulator() {
 		}
 	    }
 	}
-	console.log("moow")
-	console.log(graph)
-	console.log(qubitNodes)
-	console.log(gateNodes)
-	console.log(edges)
-	console.log("poow")
-	console.log(operations)
 
 	const data = {
-	    "qubitNodes": qubitNodes,
+	    "qubitNodes": sortedQubitNodes,
 	    "operations": operations
 	}
 	fetch('/quantum/circuit/simulate', {
@@ -156,27 +221,65 @@ export function QuantumCircuitSimulator() {
 	    },
 	    body: JSON.stringify(data)
 	})
-	.then(res => res.json())
-	.then(data => console.log(data))
+	.then(res => {
+	    if (!res.ok) {
+		throw new Error(`HTTP error! status: ${res.status}`)
+	    }
+	    return res.text()
+	})
+	.then(text => {
+	    const data = JSON.parse(text)
+	    if (data.probabilities) {
+		setProbabilities(data.probabilities)
+	    }
+	})
 	.catch(err => console.error('backend call failed:', err))
     }
     return (
-	<div style={{ display: 'flex', gap: '30px'}}>
-	    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px'}}>
-		<Pallete onNodesChange={onNodesChange} />
-		<button onClick={() => simulateCircuit()}>Compile Circuit and Run</button>
+	<div style={{ display: 'flex', flexDirection: 'column', gap: '20px'}}>
+	    <div style={{ display: 'flex', gap: '30px'}}>
+		<div style={{ display: 'flex', flexDirection: 'column', gap: '10px'}}>
+		    <Pallete onNodesChange={onNodesChange} />
+		    <button className="compile-button" onClick={() => simulateCircuit()}>Compile Circuit and Run</button>
+		    <button className="clear-button" onClick={() => { setNodes([]); setEdges([]); setProbabilities([]); }}>Clear Circuit</button>
+		</div>
+		<div style= {{ height: '60vh', width: '80vw', border:'2px solid gray'}}>
+		    <ReactFlow
+		    nodes={nodes}
+		    edges={edges}
+		    nodeTypes={nodeTypes}
+		    onNodesChange={onNodesChange}
+		    onEdgesChange={onEdgesChange}
+		    onConnect={onConnect}
+		    fitView={true}
+		    />
+		</div>
 	    </div>
-	    <div style= {{ height: '80vh', width: '80vw', border:'2px solid gray'}}>
-		<ReactFlow
-		nodes={nodes}
-		edges={edges}
-		nodeTypes={nodeTypes}
-		onNodesChange={onNodesChange}
-		onEdgesChange={onEdgesChange}
-		onConnect={onConnect}
-		fitView={true}
-		/>
-	    </div>
+	    {probabilities.length > 0 && (
+		<div style={{ padding: '20px', border: '2px solid #e0e0e0', borderRadius: '8px', backgroundColor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+		    <h3 style={{ margin: '0 0 15px 0', color: '#333', fontWeight: '600' }}>Measurement Probabilities</h3>
+		    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+			{probabilities.map((prob, idx) => (
+			    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+				<div style={{ minWidth: '60px', fontSize: '0.95em', color: '#555', fontWeight: '500' }}>
+				    |{idx.toString(2).padStart(Math.log2(probabilities.length), '0')}⟩
+				</div>
+				<div style={{ flex: 1, height: '30px', backgroundColor: '#f5f5f5', borderRadius: '4px', overflow: 'hidden', position: 'relative', border: '1px solid #e0e0e0' }}>
+				    <div style={{ 
+					height: '100%', 
+					width: `${prob * 100}%`, 
+					background: 'linear-gradient(90deg, #667eea, #764ba2)',
+					transition: 'width 0.5s ease'
+				    }} />
+				</div>
+				<div style={{ minWidth: '70px', fontSize: '1em', fontWeight: 'bold', color: '#333', textAlign: 'right' }}>
+				    {(prob * 100).toFixed(2)}%
+				</div>
+			    </div>
+			))}
+		    </div>
+		</div>
+	    )}
 	</div>
     );
 }

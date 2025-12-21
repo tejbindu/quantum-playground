@@ -563,7 +563,6 @@ dependencies = [
 [[package]]
 name = "qcomp"
 version = "0.1.0"
-source = "git+https://github.com/tejbindu/qcomp.git#98778208ad554555d0af2c665c6c02c8172e1a5a"
 dependencies = [
  "nalgebra",
 ]

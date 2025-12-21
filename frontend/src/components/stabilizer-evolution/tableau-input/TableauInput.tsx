@@ -9,13 +9,14 @@ interface TableauRow {
 interface TableauInputProps {
   numQubits?: number;
   onNumQubitsChange?: (count: number) => void;
+  onTableauChange?: (tableau: any) => void;
 }
 
-function TableauInput({ numQubits = 3, onNumQubitsChange }: TableauInputProps) {
+function TableauInput({ numQubits = 3, onNumQubitsChange, onTableauChange }: TableauInputProps) {
   const [data, setData] = useState<TableauRow[]>([
-    { prefix: '+1', q0: 'I', q1: 'I', q2: 'I' },
-    { prefix: '+1', q0: 'I', q1: 'I', q2: 'I' },
-    { prefix: '+1', q0: 'I', q1: 'I', q2: 'I' }
+    { prefix: '+1', q0: 'X', q1: 'I', q2: 'I' },
+    { prefix: '+1', q0: 'I', q1: 'X', q2: 'I' },
+    { prefix: '+1', q0: 'I', q1: 'I', q2: 'X' }
   ]);
   const [draggedRow, setDraggedRow] = useState<number | null>(null);
 
@@ -29,6 +30,22 @@ function TableauInput({ numQubits = 3, onNumQubitsChange }: TableauInputProps) {
       return newRow;
     }));
   }, [numQubits]);
+
+  // Notify parent when data changes
+  useEffect(() => {
+    if (onTableauChange) {
+      const generators = data.map(row => {
+        const paulis = Array(numQubits).fill(null).map((_, i) => row[`q${i}`] || 'I');
+        let phase = 0;
+        if (row.prefix === '+1') phase = 0;
+        else if (row.prefix === '-1') phase = 1;
+        else if (row.prefix === '+i') phase = 2;
+        else if (row.prefix === '-i') phase = 3;
+        return { paulis, phase };
+      });
+      onTableauChange(generators);
+    }
+  }, [data, numQubits, onTableauChange]);
 
   const updateCell = (rowIdx: number, field: string, value: string) => {
     setData(prev => prev.map((row, idx) => 
