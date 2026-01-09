@@ -19,6 +19,6 @@ export default defineConfig({
       }
     },
     host: true,
-    allowedHosts: ['qp.yashpathak.in']
+    allowedHosts: ['qauntum-playground.yashpathak.in']
   }
 })
