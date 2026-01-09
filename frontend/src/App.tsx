@@ -8,8 +8,8 @@ function App() {
 
     const windows: [string, React.JSX.Element][] = [
 	['Quantum Circuit Simulation', <QuantumCircuitSimulator />], 
-	['Stabilizer Tableu Operations', <StablizerEvolutionSimulator />],
-	['Quantum Error Correction', <QECSimulator />]
+	// ['Stabilizer Tableu Operations', <StablizerEvolutionSimulator />],
+	// ['Quantum Error Correction', <QECSimulator />]
     ]
 
   return (
